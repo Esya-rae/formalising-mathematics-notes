@@ -100,12 +100,14 @@ example : (P ↔ Q) → (R ↔ S) → (P ∧ R ↔ Q ∧ S) := by
   done
 
 example : ¬(P ↔ ¬P) := by
-  change (P ↔ (P → False)) → False
+  change (P ↔ ¬P) → False
   intro h
   cases' h with h1 h2
-  sorry
-
-
-
-
+  by_cases hP: P
+  apply h1
+  assumption
+  assumption
+  apply hP
+  apply h2
+  assumption
   done
