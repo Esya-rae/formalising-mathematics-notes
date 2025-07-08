@@ -32,13 +32,19 @@ example : ∀ a b : ℝ, ∃ x, (a + b) ^ 3 = a ^ 3 + x * a ^ 2 * b + 3 * a * b 
   done
 
 example : ∃ x : ℝ, ∀ y, y + y = x * y := by
-  sorry
+  use 2
+  intro a
+  ring
   done
 
 example : ∀ x : ℝ, ∃ y, x + y = 2 := by
-  sorry
+  intro x
+  use 2 - x
+  ring
   done
 
 example : ∀ x : ℝ, ∃ y, x + y ≠ 2 := by
-  sorry
+  intro x
+  use 1 - x
+  norm_num
   done
