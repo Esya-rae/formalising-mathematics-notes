@@ -42,7 +42,7 @@ def myFavouriteNumber : ℕ := 7
 /-- For any expression in Lean, I can use `sorry` as a placeholder to mean "I'll fill this in
 later". Any definition or proof that uses `sorry` will give a warning. Let's fill this one in now
 with your favourite number! -/
-def yourFavouriteNumber : ℕ := sorry
+def yourFavouriteNumber : ℕ := 57
 
 #check myFavouriteNumber
 
@@ -88,9 +88,9 @@ theorem two_plus_two_not_equals_five : 2 + 2 ≠ 5 := by simp
 -- is an open problem in number theory.
 -- Just like before, this gives me a yellow warning, because I've used `sorry` here instead of
 -- giving the proof.
-theorem erdos_straus :
-    ∀ n : ℕ, 2 ≤ n → ∃ x y z : ℕ, 4 * x * y * z = n * (x * y + x * z + y * z) :=
-  sorry
+-- theorem erdos_straus :
+--     ∀ n : ℕ, 2 ≤ n → ∃ x y z : ℕ, 4 * x * y * z = n * (x * y + x * z + y * z) :=
+--   sorry
 
 -- # How can we make these expressions?
 -- But now the real question is: now that we know certain expressions correspond to proofs, how can
@@ -203,7 +203,7 @@ example (n : ℕ) : Fintype.card (Fin n) = n := by simp
 -- This is a restricted version of `simp` which simplifies in the same way, but *only* uses the
 -- lemmas listed.
 -- Here's an example:
-example (n : ℕ) : Fintype.card (Fin n) = n := by simp?
+example (n : ℕ) : Fintype.card (Fin n) = n := by simp only [Fintype.card_fin]
 -- Changing `simp` to `simp?` is sometimes called "squeezing" it, and it has a secondary use of
 -- helping you figure out what `simp` actually did, or finding lemmas which are useful in your
 -- situation.
@@ -217,11 +217,13 @@ example (a b c : ℝ) : a * b * c = b * (a * c) := by
 
 -- Try these using rw.
 example (a b c : ℝ) : c * b * a = b * (a * c) := by
-  sorry
+  rw [mul_assoc, mul_comm c (b * a)]
+  rw [mul_assoc]
 
 -- Don't forget you can use ← to rewrite in the reverse direction!
 example (a b c : ℝ) : a * (b * c) = b * (a * c) := by
-  sorry
+  rw [←mul_assoc, mul_comm a b]
+  rw [mul_assoc]
 
 -- An example.
 example (a b c : ℝ) : a * b * c = b * c * a := by
@@ -231,10 +233,11 @@ example (a b c : ℝ) : a * b * c = b * c * a := by
 /- Try doing the first of these without providing any arguments at all,
    and the second with only one argument. -/
 example (a b c : ℝ) : a * (b * c) = b * (c * a) := by
-  sorry
+  rw [←mul_assoc, mul_comm]
+  rw [←mul_assoc, mul_comm]
 
 example (a b c : ℝ) : a * (b * c) = b * (a * c) := by
-  sorry
+  rw [←mul_assoc, mul_comm a b, mul_assoc]
 
 -- Using facts from the local context.
 example (a b c d e f : ℝ) (h : a * b = c * d) (h' : e = f) : a * (b * e) = c * (d * f) := by
@@ -244,11 +247,17 @@ example (a b c d e f : ℝ) (h : a * b = c * d) (h' : e = f) : a * (b * e) = c *
   rw [mul_assoc]
 
 example (a b c d e f : ℝ) (h : b * c = e * f) : a * b * c * d = a * e * f * d := by
-  sorry
+  repeat rw [mul_assoc]
+  rw [←mul_assoc b c d, ←mul_assoc e f d]
+  rw [h]
+
 
 -- The lemma `sub_self` could be helpful
 example (a b c d : ℝ) (hyp : c = b * a - d) (hyp' : d = a * b) : c = 0 := by
-  sorry
+  rw [hyp'] at hyp
+  rw [mul_comm] at hyp
+  simp only [sub_self] at hyp
+  exact hyp
 
 example (a b c d e f : ℝ) (h : a * b = c * d) (h' : e = f) : a * (b * e) = c * (d * f) := by
   rw [h', ← mul_assoc, h, mul_assoc]
@@ -304,11 +313,11 @@ example : (a + b) * (a + b) = a * a + 2 * (a * b) + b * b :=
 example : (a + b) * (a + b) = a * a + 2 * (a * b) + b * b :=
   calc
     (a + b) * (a + b) = a * a + b * a + (a * b + b * b) := by
-      sorry
+      rw [mul_add, add_mul, add_mul]
     _ = a * a + (b * a + a * b) + b * b := by
-      sorry
+      ring
     _ = a * a + 2 * (a * b) + b * b := by
-      sorry
+      ring
 
 end
 
@@ -317,10 +326,23 @@ section
 variable (a b c d : ℝ)
 
 example : (a + b) * (c + d) = a * c + a * d + b * c + b * d := by
-  sorry
+  calc
+    (a + b) * (c + d) = a * c + b * c + a * d + b * d := by
+      rw [mul_add, add_mul, add_mul, ←add_assoc]
+    _ = a * c + (b * c + a * d + b * d) := by
+      rw [add_assoc, add_assoc, ←add_assoc (b * c) (a * d) (b * d)]
+    _ =  a * c + a * d + b * c + b * d := by
+      rw [add_comm (b * c) (a * d), ←add_assoc, ←add_assoc]
 
 example : (a + b) * (a - b) = a ^ 2 - b ^ 2 := by
-  sorry
+  calc
+    (a + b) * (a - b) = a * a - a * b + b * a - b * b := by
+      rw [add_mul, mul_sub, mul_sub, add_sub]
+    _ = a * a - b * b := by
+      rw [mul_comm b a, sub_add, sub_self, sub_zero]
+    _ = a ^ 2 - b ^ 2 := by
+      rw [←pow_two, ←pow_two]
+
 
 #check pow_two a
 #check mul_sub a b c
@@ -349,14 +371,17 @@ example : c * b * a = b * (a * c) := by
   ring
 
 example : (a + b) * (a + b) = a * a + 2 * (a * b) + b * b := by
-  sorry
+  ring
 
 example : (a + b) * (a - b) = a ^ 2 - b ^ 2 := by
-  sorry
+  ring
 
 example (hyp : c = d * a + b) (hyp' : b = a * d) : c = 2 * a * d := by
-  sorry
-
+  ring_nf
+  rw [hyp'] at hyp
+  ring_nf at hyp
+  rw [mul_comm a d]
+  exact hyp
 end
 
 -- The nth_rw tactic allows you to be more precise about which occurrence of a subterm you want to

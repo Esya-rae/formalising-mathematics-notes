@@ -54,25 +54,50 @@ theorem Yb_ne_Yc : Y.b ≠ Y.c := by
 
 -- no cases when they're equal!
 theorem gYb_eq_gYc : g Y.b = g Y.c := by
-  sorry
-
+  rw [g]
 open Function
 
 theorem gf_injective : Injective (g ∘ f) := by
-  sorry
+  intro x y
+  cases x
+  cases y
+  intro h
+  trivial
 
 -- This is a question on the IUM (Imperial introduction to proof course) function problem sheet.
 -- Recall that if you have a hypothesis of the form `h : ∀ A, ...`, then `specialize h X`
 -- will specialize `h` to the specific case `A = X`.
 example : ¬∀ A B C : Type, ∀ (φ : A → B) (ψ : B → C), Injective (ψ ∘ φ) → Injective ψ := by
-  sorry
+  intro h
+  specialize h X Y Z
+  specialize h f g
+  have h2: Injective (g ∘ f) := by apply gf_injective
+  apply h at h2
+  have h3: ∀ (p q: Y), g p = g q → p = q := by exact fun p q a ↦ h2 a
+  specialize h3 Y.b Y.c
+  rw [g] at h3
+  have h4: Z.d = Z.d := by rfl
+  apply h3 at h4
+  have h5: Y.b ≠ Y.c := by exact Yb_ne_Yc
+  trivial
 
 -- Below is another one. Let's make a sublemma first.
 theorem gf_surjective : Surjective (g ∘ f) := by
-  sorry
+  intro z
+  use X.a
 
 -- Another question from IUM
 example : ¬∀ A B C : Type, ∀ (φ : A → B) (ψ : B → C), Surjective (ψ ∘ φ) → Surjective φ := by
-  sorry
-
+  intro h
+  specialize h X Y Z
+  specialize h f g
+  have h2: Surjective (g ∘ f) := by exact gf_surjective
+  apply h at h2
+  have h3: ∀ y : Y, ∃ x : X, f x = y := by exact h2
+  specialize h3 Y.c
+  cases' h3 with x hx
+  cases x
+  rw [f] at hx
+  apply Yb_ne_Yc at hx
+  exact hx
 end Section3sheet1
