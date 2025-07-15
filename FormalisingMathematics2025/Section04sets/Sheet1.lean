@@ -80,18 +80,90 @@ Let's prove some theorems.
 
 -/
 
-example : A ⊆ A := by sorry
+example : A ⊆ A := by rfl
 
-example : A ⊆ B → B ⊆ C → A ⊆ C := by sorry
+example : A ⊆ B → B ⊆ C → A ⊆ C := by
+  intro h
+  intro h2
+  rw [subset_def] at h
+  rw [subset_def] at h2
+  rw  [subset_def]
+  intro y
+  intro hy
+  specialize h y
+  apply h at hy
+  specialize h2 y
+  apply h2 at hy
+  assumption
 
-example : A ⊆ A ∪ B := by sorry
+example : A ⊆ A ∪ B := by
+  rw [subset_def]
+  intro a ha
+  rw [mem_union_iff]
+  left
+  assumption
 
-example : A ∩ B ⊆ A := by sorry
+example : A ∩ B ⊆ A := by
+  rw [subset_def]
+  intro a ha
+  cases' ha with ha hb
+  assumption
 
-example : A ⊆ B → A ⊆ C → A ⊆ B ∩ C := by sorry
+example : A ⊆ B → A ⊆ C → A ⊆ B ∩ C := by
+  intro h
+  intro h2
+  intro a ha
+  rw [subset_def] at h
+  rw [subset_def] at h2
+  specialize h a
+  specialize h2 a
+  have ha2: a ∈ A := by exact ha
+  apply h at ha
+  apply h2 at ha2
+  rw [mem_inter_iff]
+  constructor <;> assumption
 
-example : B ⊆ A → C ⊆ A → B ∪ C ⊆ A := by sorry
+example : B ⊆ A → C ⊆ A → B ∪ C ⊆ A := by
+  repeat rw [subset_def]
+  intro h h2
+  intro x
+  rw [mem_union_iff]
+  specialize h x
+  specialize h2 x
+  intro h3
+  cases' h3 with hb hc
+  apply h at hb
+  assumption
+  apply h2 at hc
+  assumption
 
-example : A ⊆ B → C ⊆ D → A ∪ C ⊆ B ∪ D := by sorry
+example : A ⊆ B → C ⊆ D → A ∪ C ⊆ B ∪ D := by
+  repeat rw [subset_def]
+  intro h h2
+  intro x
+  intro hac
+  rw [mem_union_iff]
+  rw [mem_union_iff] at hac
+  specialize h x
+  specialize h2 x
+  cases' hac with ha hc
+  apply h at ha
+  left
+  assumption
+  apply h2 at hc
+  right
+  assumption
 
-example : A ⊆ B → C ⊆ D → A ∩ C ⊆ B ∩ D := by sorry
+
+example : A ⊆ B → C ⊆ D → A ∩ C ⊆ B ∩ D := by
+  repeat rw [subset_def]
+  intro h h2
+  intro x
+  repeat rw [mem_inter_iff]
+  intro hac
+  specialize h x
+  specialize h2 x
+  cases' hac with ha hc
+  apply h at ha
+  apply h2 at hc
+  constructor <;> assumption

@@ -30,18 +30,43 @@ variable (X : Type) -- Everything will be a subset of `X`
   (x y z : X) -- x,y,z are elements of `X` or, more precisely, terms of type `X`
 
 -- x,y,z are elements of `X` or, more precisely, terms of type `X`
-example : x ∉ A → x ∈ A → False := by sorry
+example : x ∉ A → x ∈ A → False := by
+  intro h
+  change x ∈ A → False at h
+  assumption
 
-example : x ∈ A → x ∉ A → False := by sorry
+example : x ∈ A → x ∉ A → False := by
+  intro h h1
+  trivial
 
-example : A ⊆ B → x ∉ B → x ∉ A := by sorry
+example : A ⊆ B → x ∉ B → x ∉ A := by
+  intro h h1
+  rw [subset_def] at h
+  by_contra h2
+  specialize h x
+  apply h at h2
+  trivial
 
 -- Lean couldn't work out what I meant when I wrote `x ∈ ∅` so I had
 -- to give it a hint by telling it the type of `∅`.
-example : x ∉ (∅ : Set X) := by sorry
+example : x ∉ (∅ : Set X) := by
+  by_contra h
+  change False at h
+  trivial
 
-example : x ∈ Aᶜ ↔ x ∉ A := by sorry
+example : x ∈ Aᶜ ↔ x ∉ A := by
+  trivial
 
-example : (∀ x, x ∈ A) ↔ ¬∃ x, x ∈ Aᶜ := by sorry
+example : (∀ x, x ∈ A) ↔ ¬∃ x, x ∈ Aᶜ := by
+  rw [not_exists]
+  change (∀ (x : X), x ∈ A) ↔ ∀ (x : X), (x ∈ Aᶜ → False)
+  change (∀ (x : X), x ∈ A) ↔ ∀ (x : X), (x ∉ A → False)
+  change (∀ (x : X), x ∈ A) ↔ ∀ (x : X), ((x ∈ A → False) → False)
+  simp
 
-example : (∃ x, x ∈ A) ↔ ¬∀ x, x ∈ Aᶜ := by sorry
+
+example : (∃ x, x ∈ A) ↔ ¬∀ x, x ∈ Aᶜ := by
+  rw [not_forall]
+  change (∃ x, x ∈ A) ↔ ∃ x, (x ∈ Aᶜ → False)
+  change (∃ x, x ∈ A) ↔ ∃ x, ((x ∈ A → False) → False)
+  simp
