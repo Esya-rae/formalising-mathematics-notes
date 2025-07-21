@@ -46,20 +46,20 @@ example (g : G) : g⁻¹ * g = 1 :=
 -- with the name of the axiom it found. Note also that you can instead *guess*
 -- the names of the axioms. For example what do you think the proof of `1 * a = a` is called?
 example (a b c : G) : a * b * c = a * (b * c) := by
-  sorry
+  exact mul_assoc a b c
 
 -- can alternatively be found with `apply?` if you didn't know the answer already
 -- or `rw?`
 -- or `simp?`
 example (a : G) : a * 1 = a := by
-  sorry
+  rw [@mul_right_eq_self]
 
 -- Can you guess the last two?
 example (a : G) : 1 * a = a := by
-  sorry
+  simp only [one_mul]
 
 example (a : G) : a * a⁻¹ = 1 := by
-  sorry
+  exact mul_inv_cancel a
 
 -- As well as the axioms, Lean has many other standard facts which are true
 -- in all groups. See if you can prove these from the axioms, or find them
@@ -68,26 +68,36 @@ example (a : G) : a * a⁻¹ = 1 := by
 variable (a b c : G)
 
 example : a⁻¹ * (a * b) = b := by
-  sorry
+  exact inv_mul_cancel_left a b
 
 example : a * (a⁻¹ * b) = b := by
-  sorry
+  exact mul_inv_cancel_left a b
 
 example {a b c : G} (h1 : b * a = 1) (h2 : a * c = 1) : b = c := by
   -- hint for this one if you're doing it from first principles: `b * (a * c) = (b * a) * c`
-  sorry
+  have h: b * (a * c) = (b * a) * c := by exact Eq.symm (mul_assoc b a c)
+  rw [h1, h2] at h
+  simp at h
+  assumption
 
 example : a * b = 1 ↔ a⁻¹ = b := by
-  sorry
+  constructor
+  intro h
+  have h1: a⁻¹ * (a * b) = a⁻¹ := by exact mul_right_eq_self.mpr h
+  rw [inv_mul_cancel_left a b] at h1
+  exact id (Eq.symm h1)
+  intro h
+  rw [←h]
+  exact mul_inv_cancel a
 
 example : (1 : G)⁻¹ = 1 := by
-  sorry
+  exact inv_one
 
 example : a⁻¹⁻¹ = a := by
-  sorry
+  exact DivisionMonoid.inv_inv a
 
 example : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
-  sorry
+  exact DivisionMonoid.mul_inv_rev a b
 
 /-
 
@@ -106,5 +116,19 @@ educated guessing).
 example : (b⁻¹ * a⁻¹)⁻¹ * 1⁻¹⁻¹ * b⁻¹ * (a⁻¹ * a⁻¹⁻¹⁻¹) * a = 1 := by group
 
 -- Try this trickier problem: if g^2=1 for all g in G, then G is abelian
-example (h : ∀ g : G, g * g = 1) : ∀ g h : G, g * h = h * g := by
-  sorry
+example (h : ∀ g : G, g * g = 1) : ∀ g t : G, g * t = t * g := by
+  intro g t
+  have hg: g * g = 1 := by exact h g
+  have ht: t * t = 1 := by exact h t
+  have htg: (t * g) * (t * g) = 1 := by exact h (t * g)
+  have h1: (g * 1) = g := by exact MulOneClass.mul_one g
+  have h2: (g * 1) * g = g * g := by exact mul_right_cancel_iff.mpr h1
+  rw [←ht] at h2
+  rw [←mul_assoc, mul_assoc, hg, ←htg] at h2
+  have h3: g * t * (t * g) * (t * g) = t * g * (t * g) * (t * g) :=
+  by exact congrFun (congrArg HMul.hMul h2) (t * g)
+  rw [mul_assoc] at h3
+  nth_rewrite 3 [mul_assoc] at h3
+  rw [htg] at h3
+  repeat rw [mul_one] at h3
+  assumption

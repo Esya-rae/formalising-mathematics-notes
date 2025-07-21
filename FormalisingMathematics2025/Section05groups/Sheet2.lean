@@ -53,13 +53,37 @@ first.
 
 -/
 
-theorem mul_left_cancel (h : a * b = a * c) : b = c := by sorry
+theorem mul_left_cancel (h : a * b = a * c) : b = c := by
+  have h1: a⁻¹ * (a * b) = a⁻¹ * (a * c) := by apply congrArg (HMul.hMul a⁻¹) h
+  repeat rw [←mul_assoc] at h1
+  repeat rw [inv_mul_cancel] at h1
+  repeat rw [one_mul] at h1
+  assumption
 
-theorem mul_eq_of_eq_inv_mul (h : b = a⁻¹ * c) : a * b = c := by sorry
+theorem mul_one (a : G) : a * 1 = a := by
+  have h: (1 : G) * (1 : G)  = (1 : G) := by exact one_mul 1
+  nth_rewrite 1 [←inv_mul_cancel a] at h
+  nth_rewrite 2 [←inv_mul_cancel a] at h
+  rw [mul_assoc] at h
+  apply mul_left_cancel at h
+  assumption
 
-theorem mul_one (a : G) : a * 1 = a := by sorry
+theorem mul_inv_cancel (a : G) : a * a⁻¹ = 1 := by
+  have h: 1 * a⁻¹ = a⁻¹ := by exact one_mul a⁻¹
+  rw [←inv_mul_cancel a] at h
+  nth_rewrite 3 [←mul_one a⁻¹] at h
+  rw [mul_assoc] at h
+  apply mul_left_cancel at h
+  assumption
 
-theorem mul_inv_cancel (a : G) : a * a⁻¹ = 1 := by sorry
+theorem mul_eq_of_eq_inv_mul (h : b = a⁻¹ * c) : a * b = c := by
+  have h1: a * b = a * (a⁻¹ * c) := by apply congrArg (HMul.hMul a) h
+  rw [←mul_assoc] at h1
+  rw [mul_inv_cancel] at h1
+  rw [one_mul] at h1
+  assumption
+
+
 
 /-
 And now we have all the pieces of information, we can put them together in this lemma.
@@ -93,21 +117,21 @@ class BadGroup (G : Type) extends One G, Mul G, Inv G : Type where
 -- `Bool` is a type with two terms, `Bool.true` and `Bool.false`. See if you can make it into
 -- a bad group which isn't a group!
 instance : One Bool :=
-  ⟨sorry⟩
+  ⟨Bool.false⟩
 
 instance : Mul Bool :=
-  ⟨sorry⟩
+  ⟨fun a b => a⟩
 
 instance : Inv Bool :=
-  ⟨sorry⟩
+  ⟨fun a => Bool.false⟩
 
 instance : BadGroup Bool where
-  mul_assoc := sorry
+  mul_assoc := by exact fun a b c ↦ rfl
   -- `by decide`, might be able to do this
-  mul_one := sorry
+  mul_one := by exact fun a ↦ rfl
   -- by decide
-  inv_mul_cancel := sorry
+  inv_mul_cancel := by exact fun a ↦ rfl
   -- by decide
 
-example : ¬∀ a : Bool, 1 * a = a := by sorry
+example : ¬∀ a : Bool, 1 * a = a := by decide
 -- by decide
