@@ -85,17 +85,41 @@ example : a ⊔ b = b ⊔ a := by
   -- you might want to start with `apply le_antisymm` (every lattice is a partial order so this is
   -- OK)
   -- You'll then have two goals so use `\.` and indent two spaces.
-  sorry
+  apply le_antisymm
+  · apply sup_le
+    · exact le_sup_right
+    · exact le_sup_left
+  · apply sup_le
+    · exact le_sup_right
+    · exact le_sup_left
 
 example : a ⊔ b ⊔ c = a ⊔ (b ⊔ c) := by
-  sorry
+  apply le_antisymm
+  · apply sup_le
+    · apply sup_le
+      · exact le_sup_left
+      · have hb: b ≤ b ⊔ c := by exact le_sup_left
+        exact le_sup_of_le_right hb
+    · have hc: c ≤ b ⊔ c := by exact le_sup_right
+      exact le_sup_of_le_right hc
+  · apply sup_le
+    · have ha: a ≤ a ⊔ b:= by exact le_sup_left
+      exact le_sup_of_le_left ha
+    · apply sup_le
+      · have hb: b ≤ a ⊔ b:= by exact le_sup_right
+        exact le_sup_of_le_left hb
+      · exact le_sup_right
 
 -- could golf this entire proof into one (long) line
 -- `a ⊓ _` preserves `≤`.
 -- Note: this is called `inf_le_inf_left a h` in mathlib; see if you can prove it
 -- directly without using this.
 example (h : b ≤ c) : a ⊓ b ≤ a ⊓ c := by
-  sorry
+  have h1: a ⊓ b ≤ a:= by exact inf_le_left
+  have h2: a ⊓ b ≤ b := by exact inf_le_right
+  have h3: a ⊓ b ≤ c := by exact le_trans h2 h
+  exact le_inf h1 h3
+
 
 /-
 
@@ -109,12 +133,28 @@ do have inclusions though, which is what you can prove in general.
 
 -/
 -- `inf_le_inf_left`, proved above, is helpful here.
-example : (a ⊓ b) ⊔ (a ⊓ c) ≤ a ⊓ (b ⊔ c) := by
-  sorry
+example : a ⊓ b ⊔ a ⊓ c ≤ a ⊓ (b ⊔ c) := by
+  apply sup_le
+  · have h: b ≤ b ⊔ c := by exact le_sup_left
+    exact inf_le_inf_left a h
+  · have h: c ≤ b ⊔ c := by exact le_sup_right
+    exact inf_le_inf_left a h
+
 
 -- use `sup_le_sup_left` for this one.
 example : a ⊔ b ⊓ c ≤ (a ⊔ b) ⊓ (a ⊔ c) := by
-  sorry
+  apply sup_le
+  · apply le_inf
+    · exact le_sup_left
+    · exact le_sup_left
+  · apply le_inf
+    · have h0: b ⊓ c ≤ b := by exact inf_le_left
+      have h1: b ≤ a ⊔ b := by exact le_sup_right
+      apply le_trans h0 h1
+    · have h0: b ⊓ c ≤ c := by exact inf_le_right
+      have h1: c ≤ a ⊔ c := by exact le_sup_right
+      apply le_trans h0 h1
+
 
 -- Bonus question: look up the binding powers of ⊓ and ⊔ (by using ctrl-click to jump
 -- to their definitions) and figure out which brackets
