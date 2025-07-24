@@ -69,7 +69,7 @@ There is of course much more API, but if you want to get some practice you can
 just develop some of it yourself from these two functions.
 -/
 example : (mk' N).ker = N := by
-  sorry
+  exact ker_mk' N
 
 /-
 # Universal properties
@@ -109,9 +109,24 @@ variable {G H φ N}
 variable {P : Subgroup H} [P.Normal]
 
 def ρ (h : N.map φ ≤ P) : G ⧸ N →* H ⧸ P :=
-  lift N ((mk' P).comp φ) (by
+  lift N ((mk' P).comp φ)  (by
     -- we are using `lift` so we need to supply the proof that `(mk' P).comp φ` kills `N`
-    sorry
+    change ∀ t ∈ N, t ∈  ((mk' P).comp φ).ker
+    intro t
+    intro htN
+    change ((mk' P).comp φ) t = 1
+    change (mk' P) (φ t) = 1
+    change ∀ y ∈ (Subgroup.map φ N), y ∈ P at h
+    change ∀y, (∃ x, (x ∈ N ∧ φ x = y)) → y ∈ P at h
+    specialize h (φ t)
+    have h1: φ t ∈ P := by exact h ⟨t, htN, rfl⟩
+    have h2: (mk' P) 1 = 1 := by exact rfl
+    have h3: (mk' P) 1 = (mk' P) (φ t) ↔ ∃ p ∈ P, 1 * p = φ t := by exact mk'_eq_mk' P
+    cases' h3 with h4 h5
+    have h6:  φ t ∈ P ∧ 1 * φ t = φ t := (by constructor; assumption; group)
+    have h7: (mk' P) 1 = (mk' P) (φ t) := by exact h5 ⟨φ t, h6⟩
+    rw [h2] at h7
+    rw [h7]
   )
 
 -- Now let's prove that `ρ ∘ mk' N = mk' P ∘ φ`

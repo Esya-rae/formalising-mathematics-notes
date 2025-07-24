@@ -66,14 +66,17 @@ example : G →* K :=
 -- The next three lemmas are pretty standard, but they are also in fact
 -- the axioms that show that groups form a category.
 theorem comp_id : φ.comp (MonoidHom.id G) = φ := by
-  sorry
+  ext t
+  rfl
 
 theorem id_comp : (MonoidHom.id H).comp φ = φ := by
-  sorry
+  ext t
+  rfl
 
 theorem comp_assoc {L : Type} [Group L] (ρ : K →* L) :
     (ρ.comp ψ).comp φ = ρ.comp (ψ.comp φ) := by
-  sorry
+  ext t
+  rfl
 
 -- The kernel of a group homomorphism `φ` is a subgroup of the source group.
 -- The elements of the kernel are *defined* to be `{x | φ x = 1}`.
@@ -108,26 +111,76 @@ example (φ : G →* H) (T : Subgroup H) (x : G) : x ∈ T.comap φ ↔ φ x ∈
 -- Here are some basic facts about these constructions.
 -- Preimage of a subgroup along the identity map is the same subgroup
 example (S : Subgroup G) : S.comap (MonoidHom.id G) = S := by
-  sorry
+  rfl
 
 -- Image of a subgroup along the identity map is the same subgroup
 example (S : Subgroup G) : S.map (MonoidHom.id G) = S := by
-  sorry
+  ext t
+  change (∃ x, x ∈ S ∧ (MonoidHom.id G) x = t) ↔ t ∈ S
+  constructor
+  · intro h
+    rcases h with ⟨x, ⟨hs, hx⟩⟩
+    change x = t at hx
+    rw [hx] at hs
+    assumption
+  · intro h
+    use t
+    constructor
+    · assumption
+    · rfl
+
 
 -- preimage preserves `≤` (i.e. if `S ≤ T` are subgroups of `H` then `φ⁻¹(S) ≤ φ⁻¹(T)`)
 example (φ : G →* H) (S T : Subgroup H) (hST : S ≤ T) : S.comap φ ≤ T.comap φ := by
-  sorry
+  change  ∀ (x : G), x ∈ Subgroup.comap φ S → x ∈ Subgroup.comap φ  T
+  intro x
+  intro hxs
+  change φ x ∈ T
+  change φ x ∈ S at hxs
+  change ∀ x ∈ S, x ∈ T at hST
+  specialize hST (φ x) hxs
+  assumption
 
 -- image preserves `≤` (i.e. if `S ≤ T` are subgroups of `G` then `φ(S) ≤ φ(T)`)
 example (φ : G →* H) (S T : Subgroup G) (hST : S ≤ T) : S.map φ ≤ T.map φ := by
-  sorry
+  change  ∀ x ∈ S.map φ, x ∈ T.map φ
+  intro x
+  intro hxs
+  change ∀ x ∈ S, x ∈ T at hST
+  change  ∃ y, y ∈ T ∧ φ y = x
+  change  ∃ y, y ∈ S ∧ φ y = x at hxs
+  rcases hxs with ⟨y, ⟨hys, h⟩⟩
+  use y
+  constructor
+  · apply hST
+    assumption
+  · assumption
+
+
 
 -- Pulling a subgroup back along one homomorphism and then another, is equal
 -- to pulling it back along the composite of the homomorphisms.
 example (φ : G →* H) (ψ : H →* K) (U : Subgroup K) : U.comap (ψ.comp φ) = (U.comap ψ).comap φ := by
-  sorry
+  rfl
+
 
 -- Pushing a subgroup along one homomorphism and then another is equal to
 --  pushing it forward along the composite of the homomorphisms.
 example (φ : G →* H) (ψ : H →* K) (S : Subgroup G) : S.map (ψ.comp φ) = (S.map φ).map ψ := by
-  sorry
+  ext t
+  change (∃ x, x ∈ S ∧ (ψ.comp φ) x = t) ↔ (∃ x, (∃ z, z ∈ S ∧ φ z = x) ∧ ψ x = t)
+  constructor
+  · intro h
+    rcases h with ⟨y, ⟨hys, h⟩⟩
+    use φ y
+    constructor
+    · use y
+    · apply h
+  · intro h
+    rcases h with ⟨y, ⟨hys, h⟩⟩
+    rcases hys with ⟨z, ⟨hzs, h1⟩⟩
+    use z
+    constructor
+    · assumption
+    · change  ψ (φ z) = t
+      rw [h1, h]

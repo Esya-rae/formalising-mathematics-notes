@@ -44,18 +44,33 @@ example (ha : a ∈ H) (hb : b ∈ H) : a * b ∈ H :=
 -- Let's use these axioms to make more API for subgroups.
 -- First, see if you can put the axioms together to prove subgroups are closed under "division".
 example (ha : a ∈ H) (hb : b ∈ H) : a * b⁻¹ ∈ H := by
-  sorry
+  have hb2: b⁻¹ ∈ H := by exact inv_mem hb
+  apply mul_mem ha hb2
 
 -- Now try these. You might want to remind yourself of the API for groups as explained
 -- in an earlier section, or make use of the `group` tactic.
 -- This lemma is called `Subgroup.inv_mem_iff` but try proving it yourself
 example : a⁻¹ ∈ H ↔ a ∈ H := by
-  sorry
+  constructor
+  · intro h1
+    apply inv_mem at h1
+    group at h1
+    assumption
+  · intro h
+    apply inv_mem at h
+    assumption
 
 -- this is `mul_mem_cancel_left` but see if you can do it from the axioms of subgroups.
 -- Again feel free to use the `group` tactic.
 example (ha : a ∈ H) : a * b ∈ H ↔ b ∈ H := by
-  sorry
+  constructor
+  · intro h
+    apply inv_mem at ha
+    have h2: a⁻¹ * (a * b) ∈ H := by exact mul_mem ha h
+    group at h2
+    assumption
+  · intro hb
+    apply mul_mem ha hb
 
 /-
 
@@ -107,16 +122,48 @@ variable {G H} {x : G}
 variable {y z : G}
 
 theorem conjugate.one_mem : (1 : G) ∈ {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹} := by
-  sorry
+ change  ∃ h, h ∈ H ∧ 1 = x * h * x⁻¹
+ use 1
+ group
+ constructor
+ · exact Subgroup.one_mem H
+ · trivial
 
 theorem conjugate.inv_mem (hy : y ∈ {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹}) :
     y⁻¹ ∈ {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹} := by
-  sorry
+  change ∃ h, h ∈ H ∧ y⁻¹ = x * h * x⁻¹
+  change ∃ h, h ∈ H ∧ y = x * h * x⁻¹ at hy
+  cases' hy with t ht
+  cases' ht with hth hy
+  rw [hy]
+  group
+  use t⁻¹
+  constructor
+  · apply Subgroup.inv_mem at hth
+    assumption
+  · group
 
 theorem conjugate.mul_mem (hy : y ∈ {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹})
     (hz : z ∈ {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹}) :
     y * z ∈ {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹} := by
-  sorry
+  change ∃ h, h ∈ H ∧ y * z = x * h * x⁻¹
+  change ∃ h, h ∈ H ∧ y = x * h * x⁻¹ at hy
+  change ∃ h, h ∈ H ∧ z = x * h * x⁻¹ at hz
+
+  cases' hy with t ht
+  cases' ht with hth hy
+  cases' hz with q hq
+  cases' hq with hqh hz
+
+  rw [hy, hz]
+  group
+  use t * q
+
+  constructor
+  · apply Subgroup.mul_mem
+    <;> assumption
+  · group
+
 
 -- Now here's the way to put everything together:
 def conjugate (H : Subgroup G) (x : G) : Subgroup G where
@@ -155,15 +202,66 @@ theorem mem_conjugate_iff : a ∈ conjugate H x ↔ ∃ h, h ∈ H ∧ a = x * h
   rfl
 
 theorem conjugate_mono (H K : Subgroup G) (h : H ≤ K) : conjugate H x ≤ conjugate K x := by
-  sorry
+  change ∀ a ∈ H, a ∈ K at h
+  change ∀ a ∈ conjugate H x, a ∈ conjugate K x
+  intro a
+  repeat rw [mem_conjugate_iff]
+  intro h1
+  rcases h1 with ⟨t, ⟨hth, ht⟩⟩
+
+  use t
+  constructor
+  · apply h
+    assumption
+  · assumption
 
 theorem conjugate_bot : conjugate ⊥ x = ⊥ := by
-  sorry
+  ext t
+  rw [mem_conjugate_iff]
+  rw [Subgroup.mem_bot]
+  constructor
+  · intro h
+    rcases h with ⟨a, ⟨ha, ht⟩⟩
+    rw [Subgroup.mem_bot] at ha
+    rw [ha] at ht
+    group at ht
+    assumption
+  · intro ht
+    use (1 : G)
+    constructor
+    · rw [Subgroup.mem_bot]
+    · group
+      assumption
+
 
 theorem conjugate_top : conjugate ⊤ x = ⊤ := by
-  sorry
+  ext t
+  rw [mem_conjugate_iff]
+  constructor
+  · intro h
+    trivial
+  · intro h
+    use x⁻¹ * t * x
+    constructor
+    · trivial
+    · group
 
 theorem conjugate_eq_of_abelian (habelian : ∀ a b : G, a * b = b * a) : conjugate H x = H := by
-  sorry
+  ext t
+  rw [mem_conjugate_iff]
+  constructor
+  · intro h1
+    cases' h1 with h h1
+    cases' h1 with hh ht
+    rw [habelian x h] at ht
+    group at ht
+    rw [←ht] at hh
+    assumption
+  · intro hh
+    use t
+    constructor
+    · assumption
+    · rw [habelian x t]
+      group
 
 end Section7sheet1
