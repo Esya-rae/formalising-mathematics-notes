@@ -56,9 +56,20 @@ example (X Y Z : Type) (eXY : X ≃ Y) (eYZ : Y ≃ Z) : X ≃ Z where
   toFun := fun x ↦ eYZ (eXY x)
   invFun := fun z => eXY.symm (eYZ.symm z)
   left_inv := by
-    sorry
+    change ∀ x : X, eXY.symm (eYZ.symm (eYZ (eXY x))) = x
+    intro x
+    have h1: Function.LeftInverse eYZ.invFun eYZ.toFun := by exact eYZ.left_inv
+    change ∀ y : Y, eYZ.symm (eYZ y) = y at h1
+    rw [h1]
+    apply eXY.left_inv
   right_inv := by
-    sorry
+    change ∀ z : Z, eYZ (eXY (eXY.symm (eYZ.symm z))) = z
+    intro z
+    have h1: Function.RightInverse eXY.invFun eXY.toFun := by exact eXY.right_inv
+    change ∀ y : Y, eXY (eXY.symm y) = y at h1
+    rw [h1]
+    apply eYZ.right_inv
+
 
 
 -- Because `Equiv.trans` is already there, we can instead just use it
@@ -95,7 +106,30 @@ def R (X Y : Type) : Prop :=
   ∃ e : X ≃ Y, True
 
 example : Equivalence R := by
-  sorry
+  constructor
+  · change  ∀ (x : Type), ∃ e : x ≃ x, True
+    intro X
+    have h: X ≃ X := by apply Equiv.refl
+    use h
+  · intro X Y
+    intro h
+    change ∃ e : X ≃ Y, True at h
+    cases' h with e h2
+    have h1: Y ≃ X := by exact id e.symm
+    change ∃ e : Y ≃ X, True
+    use e.symm
+  · intro X Y Z
+    intro hXY
+    intro hYZ
+    change ∃ e : X ≃ Y, True at hXY
+    change ∃ e : Y ≃ Z, True at hYZ
+    change ∃ e : X ≃ Z, True
+    cases' hXY with e1 h1
+    cases' hYZ with e2 h2
+    have h: X ≃ Z := by exact e1.trans e2
+    use h
+
+
 
 -- Remark: the equivalence classes of `R` are called *cardinals*.
 

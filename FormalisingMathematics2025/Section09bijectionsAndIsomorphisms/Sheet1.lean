@@ -48,7 +48,21 @@ example : f.Bijective ↔
 -- please ask. There's lots of little Lean tricks which make this
 -- question not too bad, but there are lots of little pitfalls too.
 example : (∃ g : Y → X, f ∘ g = id ∧ g ∘ f = id) → f.Bijective := by
-  sorry
+  intro h
+  rcases h with ⟨g, ⟨hfg, hgf⟩⟩
+  change (∀ x₁ x₂ : X, f x₁ = f x₂ → x₁ = x₂) ∧ ∀ y : Y, ∃ x : X, f x = y
+  constructor
+  · intro x₁ x₂ h
+    have h1: g (f x₁) = g (f x₂) := by exact congrArg g h
+    change (g ∘ f) x₁ = (g ∘ f) x₂ at h1
+    rw [hgf] at h1
+    change x₁ = x₂ at h1
+    assumption
+  · intro y
+    have h1: (f ∘ g) y = id y:= by rw [hfg]
+    change (f ∘ g) y = y at h1
+    change f (g y) = y at h1
+    use g y
 
 -- The other way is harder in Lean, unless you know about the `choose`
 -- tactic. Given `f` and a proof that it's a bijection, how do you
@@ -56,4 +70,18 @@ example : (∃ g : Y → X, f ∘ g = id ∧ g ∘ f = id) → f.Bijective := by
 -- `g`, and the `choose` tactic does this for you.
 -- If `hf_surj` is a proof that `f` is surjective, try `choose g hg using hf_surj`.
 example : f.Bijective → ∃ g : Y → X, f ∘ g = id ∧ g ∘ f = id := by
-  sorry
+  intro h
+  cases' h with hinj hsurj
+  choose g hg using hsurj
+  change (∀ x₁ x₂ : X, f x₁ = f x₂ → x₁ = x₂) at hinj
+  use g
+  constructor
+  · ext t
+    apply hg
+  · ext t
+    have h1: (f ((g ∘ f) t) = f (id t)) → ((g ∘ f) t = id t) :=
+    by exact fun a ↦ hinj ((g ∘ f) t) (id t) (hg (f t))
+    apply h1
+    change ((f ∘ g) ∘ f) t = f t
+    change (f (g (f t))) = f t
+    apply hg
