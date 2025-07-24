@@ -57,16 +57,23 @@ example (S : Finset X) : Finset Y :=
 -- See if you can prove these. You'll have to figure out the basic API
 -- for `Finset.image`. These theorems are in the library -- your job is simply to find them.
 example (S : Finset X) (y : Y) : y ∈ S.image f ↔ ∃ x ∈ S, f x = y := by
-  sorry
+  exact Finset.mem_image
 
 example (S : Finset X) (x : X) (hx : x ∈ S) : f x ∈ S.image f := by
-  sorry
+  exact Finset.mem_image_of_mem f hx
 
 -- Check that `Finset.image` preserves `≤` (which remember is defined to mean `⊆`)
 -- You might have to prove this one directly, using the stuff you discovered above,
 -- if you can't find it in the library.
 example (S T : Finset X) (h : S ≤ T) : S.image f ≤ T.image f := by
-  sorry
+  change ∀ t ∈ ( S.image f), t ∈ (T.image f)
+  intro t
+  repeat rw [Finset.mem_image]
+  intro hS
+  rcases hS with ⟨a, ⟨haS, hat⟩⟩
+  change ∀ a ∈ S, a ∈ T at h
+  apply h at haS
+  use a
 
 -- There are constructions for all the basic operations you might want to do on finsets:
 
